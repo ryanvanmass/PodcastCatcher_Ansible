@@ -6,7 +6,17 @@
         apt:
           name: git
           state: latest
-            
+
+  - name: Install Docker
+    hosts: localhost
+    tasks:
+      - name: Download Docker Install Script
+        git:
+          repo: https://github.com/docker/docker-install
+          dest: /root/docker-install
+      - name: Install Docker Install Script
+        shell: sh /root/docker-install/install.sh
+
   - name: Download Required Github Repos
     hosts: localhost
     tasks: 
