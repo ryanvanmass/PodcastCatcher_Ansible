@@ -1,0 +1,75 @@
+---
+  - name: Download Basic Packages
+    hosts: localhost
+    tasks:
+      - name: Git
+        apt:
+          name: git
+          state: latest
+            
+  - name: Download Required Github Repos
+    hosts: localhost
+    tasks: 
+      - name: Upodder
+        git:
+          repo: https://github.com/ryanvanmass/upodder
+          dest: /root/Upodder
+      - name: Youtube-DL
+        git:
+          repo: https://github.com/ryanvanmass/youtube-dl
+          dest: /root/YoutubeDL
+    
+  - name: Build Docker Images
+    hosts: localhost
+    tasks:
+      - name: Upodder
+        shell: docker build -t upodder /root/Upodder
+      - name: Youtube-DL
+        shell: docker build -t youtubedl /root/YoutubeDL
+  
+  - name: Connect to NFS Share on DeathStar
+    hosts: localhost
+    tasks:
+      - name: Install NFS Utility
+        apt:
+          name: nfs-common
+          state: latest
+      - name: Create Mount Point Directory
+        file:
+          path: /media/Styx/
+          state: directory
+      - name: create Fstab Entry
+        mount:
+          state: "mounted"
+          fstype: "nfs"
+          name: /media/Styx
+          src: 192.168.0.157:/mnt/NetworkShares/Styx"
+          opts: defaults
+          dump: 0
+          passno: 0
+  
+  - name: Setup Upodder Automation
+    hosts: localhost
+    tasks:
+# Makes Modification to default Setup.sh file from Git Repo
+      - name: Modify Setup.sh to Create File Structure
+        shell: echo " " >> /root/Upodder/Setup.sh && echo 'mkdir -p /media/Styx/Podcast/$1' >> /root/Upodder/Setup.sh
+      - name: Modify Setup.sh to shedule the container to Auto-run
+        shell: echo "echo \"ExecStart=docker run --rm -v \"/media/Styx/Podcast/\$1:/mnt/output\" -v \"/root/Upodder/Podcasts/\$1/config:/mnt/config\" upodder\" >> /etc/systemd/system/docker_podcast.service" >> /root/Upodder/Setup.sh
+      - name: Modify Setup.sh to refresh Systemd Services
+        shell: echo 'systemctl daemon-reload' >> /root/Upodder/Setup.sh
+# Copy Service and timer to /etc/systemd/system
+      - name: Copy Service to Host
+        shell: cp $PWD/Services/docker_podcast.service /etc/systemd/system
+      - name: Copy Timer to Host
+        shell: cp $PWD/Services/docker_podcast.timer /etc/systemd/system
+
+  - name: Setup Youtube-DL Automation
+    hosts: localhost
+    tasks:
+      - name: Copy Setup.sh to Host
+        shell: cp $PWD/YoutubeDL_Setup.sh /root/YoutubeDL/Setup.sh
+      - name: Copy Service to Host
+        shell: cp $PWD/Services/docker_video.service /etc/systemd/system
+      - name: Copy Timer to Host
+        shell: cp $PWD/Services/docker_video.timer /etc/systemd/system
