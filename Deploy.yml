@@ -54,6 +54,7 @@
           fstype: "nfs"
           name: /media/Styx
           src: 192.168.0.157:/mnt/NetworkShares/Styx"
+          path: /media/Styx
           opts: defaults
           dump: 0
           passno: 0
