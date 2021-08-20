@@ -49,15 +49,16 @@
           path: /media/Styx/
           state: directory
       - name: create Fstab Entry
-        mount:
-          state: "mounted"
-          fstype: "nfs"
-          name: /media/Styx
-          src: 192.168.0.157:/mnt/NetworkShares/Styx"
-          path: /media/Styx
-          opts: defaults
-          dump: 0
-          passno: 0
+        shell: echo "192.168.0.157:/mnt/NetworkShares/Styx  /media/Styx nfs defaults  0 0" >> /etc/fstab
+#        mount:
+#          state: "mounted"
+#          fstype: "nfs"
+#          name: /media/Styx
+#          src: 192.168.0.157:/mnt/NetworkShares/Styx"
+#          path: /media/Styx
+#          opts: defaults
+#          dump: 0
+#          passno: 0
   
   - name: Setup Upodder Automation
     hosts: localhost
